@@ -6,7 +6,7 @@ import 'package:hubble_app_core/models.dart';
 import 'package:hubble_app_core/repositories.dart';
 import 'package:rxdart/rxdart.dart';
 
-final retryForever = (error, stack) {
+final _retryForever = (error, stack) {
   print("hey $error");
   return Stream.value("").delay(Duration(seconds: 5));
 };
@@ -16,28 +16,35 @@ class PictureRepositoryImpl implements PictureRespository {
 
   PictureRepositoryImpl(this.client);
 
+  var _cache = Map<String, HubblePictureDetails>();
+
   @override
   Stream<List<HubblePicture>> getPictures() => Rx.retryWhen(
-        fetchPictures,
-        retryForever,
+        _fetchPictures,
+        _retryForever,
       );
 
-  Stream<List<HubblePicture>> fetchPictures() {
+  Stream<List<HubblePicture>> _fetchPictures() {
     return Rx.range(0, 10)
         .asyncMap((page) => client.getPicturesList(page))
         .reduce((previous, element) => previous + element)
         .asStream();
   }
 
-//  @override
-//  Stream<HubblePictureDetails> getPictureDetail(String id) => Rx.retryWhen(
-//        () => client.getPictureDetails(int.parse(id)).asStream(),
-//        retryForever,
-//      );
-
   @override
-  Stream<HubblePictureDetails> getPictureDetail(String id) =>
-      client.getPictureDetails(int.parse(id)).asStream();
+  Stream<HubblePictureDetails> getPictureDetail(String id) {
+    final inCache = _cache[id];
+    if (inCache != null) {
+      return Stream.value(inCache);
+    } else {
+      return client
+          .getPictureDetails(int.parse(id))
+          .asStream()
+          .doOnData((data) {
+        _cache[id] = data;
+      });
+    }
+  }
 }
 
 extension ThisOneIsForNico on String {
@@ -74,12 +81,9 @@ class HubbleClient {
 
     return HubblePictureDetails((b) => b
       ..description = body["description"]
-      ..url = ((body["image_files"][0]["file_url"] as String).prefixHttps())
-    );
+      ..url = ((body["image_files"][0]["file_url"] as String).prefixHttps()));
   }
 }
 
 PictureRespository defaultPictureRespository() =>
     PictureRepositoryImpl(HubbleClient(Client()));
-
-
