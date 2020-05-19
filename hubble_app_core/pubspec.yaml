@@ -1,0 +1,21 @@
+name: hubble_app_core
+version: 1.0.0+1
+
+
+environment:
+  sdk: ">=2.7.0 <3.0.0"
+
+dependencies:
+  rxdart: ^0.24.1
+  built_value: ^7.1.0
+  mobx: ^1.2.0
+
+
+dev_dependencies:
+  build_runner: ^1.10.0
+  built_value_generator: ^7.1.0
+  mobx_codegen: ^1.1.0
+  test: ^1.14.3
+  flutter_test:
+    sdk: flutter
+  mockito: ^4.1.1

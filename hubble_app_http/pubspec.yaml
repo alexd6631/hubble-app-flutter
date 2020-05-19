@@ -1,0 +1,12 @@
+name: hubble_app_http
+version: 1.0.0+1
+
+
+environment:
+  sdk: ">=2.7.0 <3.0.0"
+
+dependencies:
+  hubble_app_core:
+    path: ../hubble_app_core
+  rxdart: ^0.24.1
+  http: ^0.12.1
