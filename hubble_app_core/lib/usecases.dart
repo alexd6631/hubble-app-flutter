@@ -44,13 +44,7 @@ abstract class PictureDetailStoreBase with Store {
   final PictureRespository respository;
 
   @observable
-  bool isLoading = false;
-
-  @observable
-  HubblePictureDetails pictureDetails = null;
-
-  @observable
-  dynamic error = null;
+  ObservableFuture<HubblePictureDetails> pictureDetails;
 
   PictureDetailStoreBase(this.pictureId, this.respository) {
     load();
@@ -58,16 +52,7 @@ abstract class PictureDetailStoreBase with Store {
 
   @action
   load() async {
-    isLoading = true;
-    pictureDetails = null;
-    error = null;
-    try {
-      pictureDetails = await respository.getPictureDetail(pictureId).first;
-    } catch (e) {
-      print(e);
-      error = e;
-    } finally {
-      isLoading = false;
-    }
+    pictureDetails =
+        ObservableFuture(respository.getPictureDetail(pictureId).first);
   }
 }

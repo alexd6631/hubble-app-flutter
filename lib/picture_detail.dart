@@ -5,13 +5,14 @@ import 'package:flutter_html/style.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:hubble_app_core/models.dart';
 import 'package:hubble_app_core/usecases.dart';
+import 'package:mobx/mobx.dart';
 import 'package:photo_view/photo_view.dart';
 
 class PictureDetailPage extends StatelessWidget {
   final HubblePicture picture;
-  final PictureDetailStore bloc;
+  final PictureDetailStore store;
 
-  PictureDetailPage(this.picture, this.bloc);
+  PictureDetailPage(this.picture, this.store);
 
   @override
   Widget build(BuildContext context) {
@@ -27,55 +28,61 @@ class PictureDetailPage extends StatelessWidget {
   }
 
   List<Widget> getActions(BuildContext context) {
-    if (bloc.pictureDetails?.description != null) {
-      return <Widget>[
-        IconButton(
-          icon: Icon(Icons.info),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (ctx) => PictureInfoPage(
-                        details: bloc.pictureDetails,
-                      ),
-                  fullscreenDialog: true),
-            );
-          },
-        )
-      ];
+    if (store.pictureDetails.status == FutureStatus.fulfilled) {
+      final details = store.pictureDetails.value;
+      if (details.description != null) {
+        return <Widget>[
+          IconButton(
+            icon: Icon(Icons.info),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (ctx) => PictureInfoPage(
+                          details: details,
+                        ),
+                    fullscreenDialog: true),
+              );
+            },
+          )
+        ];
+      } else {
+        return <Widget>[];
+      }
     } else {
       return <Widget>[];
     }
   }
 
   Widget _body() {
-    if (bloc.isLoading) {
-      return Center(
-          child: CircularProgressIndicator(
-        value: null,
-      ));
-    } else if (bloc.pictureDetails != null) {
-      return PictureDetailWidget(bloc.pictureDetails);
-    } else {
-      return errorWidget();
+    switch (store.pictureDetails.status) {
+      case FutureStatus.pending:
+        return Center(
+            child: CircularProgressIndicator(
+          value: null,
+        ));
+      case FutureStatus.rejected:
+        return _errorWidget();
+      case FutureStatus.fulfilled:
+        return PictureDetailWidget(store.pictureDetails.value);
     }
   }
 
-  Widget errorWidget() => Padding(
-    padding: const EdgeInsets.all(8.0),
-    child: Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: <Widget>[
-        Text("Error: ${bloc.error}"),
-        RaisedButton(
-          onPressed: () {
-            bloc.load();
-          },
-          child: Text("Réessayer"),
-        )
-      ],
-    ),
-  );
+  Widget _errorWidget() => Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text("Error: ${store.pictureDetails.error}"),
+            RaisedButton(
+              onPressed: () {
+                store.load();
+              },
+              child: Text("Réessayer"),
+            )
+          ],
+        ),
+      );
 }
 
 class PictureDetailWidget extends StatelessWidget {

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:hubble_app_core/models.dart';
 import 'package:hubble_app_core/repositories.dart';
 import 'package:hubble_app_core/usecases.dart';
+import 'package:mobx/mobx.dart' as mobx;
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 
@@ -59,12 +60,10 @@ void main() {
 
       final store = PictureDetailStore("42", mockRepo);
       store.load();
-      print(store);
-      expect(store.isLoading, true);
-      expect(store.pictureDetails, null);
+      expect(store.pictureDetails.status, mobx.FutureStatus.pending);
       await Future.delayed(Duration(seconds: 0));
-      expect(store.isLoading, false);
-      expect(store.pictureDetails, details);
+      expect(store.pictureDetails.status, mobx.FutureStatus.fulfilled);
+      expect(store.pictureDetails.value, details);
     });
   });
 }
